@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_project/Profile.dart';
+import 'OrderTracking.dart';
 
 class HomeScreen extends StatelessWidget {
 
@@ -17,7 +18,7 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: Color(0xFF495159), // Match the login page color
         actions: [
           IconButton(
-            icon: Icon(Icons.person),color: Color(0xFF73C2BE),
+            icon: Icon(Icons.account_circle),color: Color(0xFF73C2BE),
             onPressed: () {
               // Navigate to the user's profile page
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
@@ -92,7 +93,7 @@ class HomeScreen extends StatelessWidget {
           FloatingActionButton(
             onPressed: () {
               // Navigate to order tracking page
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => OrderTrackingPage()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => OrderTrackingPage()));
             },
             child: Icon(Icons.history),
             tooltip: 'Order Tracking',

@@ -35,9 +35,14 @@ class ProfilePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 26.0),
+            IconButton  (icon: Icon(Icons.account_circle_sharp, size: 70), onPressed: (){
+              //nothing
+            }
+            ),
+            SizedBox(height: 26.0),
             Text(
               'Name: John Doe',
-              style: TextStyle(fontSize: 20,color: Colors.white),
+              style: TextStyle(fontSize: 26,color: Colors.white),
             ),
             Text(
               'Age: 25',
@@ -49,7 +54,7 @@ class ProfilePage extends StatelessWidget {
             ),
             Text(
               'Address: 123 Main St, City',
-              style: TextStyle(fontSize: 28,color: Colors.white),
+              style: TextStyle(fontSize: 20,color: Colors.white),
             ),
             SizedBox(height: 16.0),
           ],
