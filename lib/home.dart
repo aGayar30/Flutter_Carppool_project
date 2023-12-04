@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
- // Make sure to import your auth.dart file
+import 'package:my_project/Profile.dart';
 
 class HomeScreen extends StatelessWidget {
 
@@ -8,7 +8,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
         backgroundColor: Color(0xFF495159),
       appBar: AppBar(
-        title: Text('ASU Carpool', style: TextStyle(
+        title: Text('Rides', style: TextStyle(
     fontSize: 32.0,
     fontWeight: FontWeight.bold,
     color: Color(0xFF73C2BE),
@@ -20,7 +20,7 @@ class HomeScreen extends StatelessWidget {
             icon: Icon(Icons.person),color: Color(0xFF73C2BE),
             onPressed: () {
               // Navigate to the user's profile page
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => UserProfilePage()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
             },
           ),
         ],
