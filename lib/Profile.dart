@@ -41,7 +41,7 @@ class ProfilePage extends StatelessWidget {
             ),
             SizedBox(height: 26.0),
             Text(
-              'Name: John Doe',
+              'Name: Ahmed Amr',
               style: TextStyle(fontSize: 26,color: Colors.white),
             ),
             Text(

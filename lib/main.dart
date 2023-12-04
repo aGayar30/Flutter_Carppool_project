@@ -1,9 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_project/auth.dart';
 import 'package:my_project/home.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:my_project/firebase_options.dart';
 
 
