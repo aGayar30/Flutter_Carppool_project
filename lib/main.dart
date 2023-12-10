@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:my_project/auth.dart';
-import 'package:my_project/home.dart';
 import 'package:my_project/firebase_options.dart';
+import 'RoleSelection.dart';
 
 
 void main() async{
@@ -97,7 +97,7 @@ class LoginPage extends StatelessWidget {
 
                   // Navigate to the next screen or perform any other action on successful login
                   // For example:
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RoleSelectionScreen()));
                 } catch (e) {
                   // Display a SnackBar with the error message
                   ScaffoldMessenger.of(scaffoldContext).showSnackBar(
@@ -107,7 +107,7 @@ class LoginPage extends StatelessWidget {
                     ),
                   );
                 }
-              },
+                },
               style: ElevatedButton.styleFrom(
                 primary: Color(0xFF73C2BE),
               ),
@@ -126,5 +126,5 @@ class LoginPage extends StatelessWidget {
       )
     );
   }
-}
+  }
 
