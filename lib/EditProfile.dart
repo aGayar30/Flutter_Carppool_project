@@ -24,9 +24,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   TextEditingController majorController = TextEditingController();
   TextEditingController carTypeController = TextEditingController();
 
-// Inside _EditProfilePageState class
-
-// Inside _EditProfilePageState class
 
   @override
   void initState() {

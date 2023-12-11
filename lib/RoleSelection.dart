@@ -12,6 +12,7 @@ class RoleSelectionScreen extends StatelessWidget {
   User? get currentUser => _firebaseAuth.currentUser;
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
+
   final database = FirebaseDatabase.instance.reference();
 
   Future<void> _checkAndCreateUserNode() async {

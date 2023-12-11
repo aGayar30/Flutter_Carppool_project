@@ -15,8 +15,6 @@ class Auth {
       email: email,
       password: password,
     );
-
-
   }
 
   Future<void> createUserWithEmailAndPassword({
