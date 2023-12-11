@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'auth.dart';
 import 'main.dart';
+import 'EditProfile.dart';
 
 class ProfilePage extends StatelessWidget {
   final Auth _auth = Auth();
@@ -25,7 +26,14 @@ class ProfilePage extends StatelessWidget {
         backgroundColor: Color(0xFF495159),
         actions: [
           IconButton(
-            icon: Icon(Icons.exit_to_app),
+            icon: Icon(Icons.edit , color: Color(0xFF73C2BE)),
+            onPressed: () {
+              // Navigate to the Edit Profile page
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EditProfilePage()));
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.exit_to_app , color: Color(0xFF73C2BE)),
             onPressed: () async {
               await _auth.signOut();
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyApp()));
