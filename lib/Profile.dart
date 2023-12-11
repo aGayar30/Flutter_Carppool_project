@@ -1,9 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'auth.dart';
 import 'main.dart';
 
 class ProfilePage extends StatelessWidget {
   final Auth _auth = Auth();
+  final DatabaseReference _userReference = FirebaseDatabase.instance.reference().child('Users');
+  User? user = Auth().currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -29,35 +33,77 @@ class ProfilePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 26.0),
-            IconButton  (icon: Icon(Icons.account_circle_sharp, size: 70), onPressed: (){
-              //nothing
+      body: Center(
+        child: FutureBuilder<DatabaseEvent>(
+          future: _userReference.child(user?.uid ?? '').once(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              // Access user data from the snapshot
+              DataSnapshot dataSnapshot = snapshot.data!.snapshot;
+              Map<dynamic, dynamic>? userData = dataSnapshot.value as Map<dynamic, dynamic>?;
+
+              if (user != null && userData != null) {
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 26.0),
+                  IconButton(
+                    icon: Icon(Icons.account_circle_sharp, size: 70),
+                    onPressed: () {
+                      // nothing
+                    },
+                  ),
+                  SizedBox(height: 40.0),
+                  Text(
+                    '${userData['name'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 12.0),
+                  Text(
+                    'Age: ${userData['age'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 12.0),
+                  Text(
+                    'Grade: ${userData['grade'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 12.0),
+                  Text(
+                    'Address: ${userData['address'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 12.0),
+                  Text(
+                    'Email: ${userData['email'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 12.0),
+                  Text(
+                    'Phone number: ${userData['phoneNumber'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 12.0),
+                  Text(
+                    'Major: ${userData['major'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                  SizedBox(height: 12.0),
+                  Text(
+                    'Car: ${userData['carType'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ],
+              );} else {
+                return Text('Error: User data is null or not a Map. ${user?.uid?? ''}');
+              }
             }
-            ),
-            SizedBox(height: 26.0),
-            Text(
-              'Name: Ahmed Amr',
-              style: TextStyle(fontSize: 26,color: Colors.white),
-            ),
-            Text(
-              'Age: 25',
-              style: TextStyle(fontSize: 20,color: Colors.white),
-            ),
-            Text(
-              'Grade: Senior',
-              style: TextStyle(fontSize: 20,color: Colors.white),
-            ),
-            Text(
-              'Address: 123 Main St, City',
-              style: TextStyle(fontSize: 20,color: Colors.white),
-            ),
-            SizedBox(height: 16.0),
-          ],
+          },
         ),
       ),
     );

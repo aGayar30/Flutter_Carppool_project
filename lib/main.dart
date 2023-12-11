@@ -90,7 +90,7 @@ class LoginPage extends StatelessWidget {
                 String password = passwordController.text.trim();
 
                 try {
-                  await _auth.signInWithEmailAndPassword(
+                  await  _auth.signInWithEmailAndPassword(
                     email: email,
                     password: password,
                   );
