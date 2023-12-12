@@ -101,12 +101,14 @@ class _DriverDashboardState extends State<DriverDashboard> {
                   destinationController.clear();
                 });
               },
-              decoration: InputDecoration(
+              decoration:
+              InputDecoration(
                 labelText: 'Period of Day',
                 labelStyle: TextStyle(color: Colors.white),
                 hintText: 'Select Period',
                 hintStyle: TextStyle(color: Colors.white54),
               ),
+
             ),
             SizedBox(height: 16.0),
             TextField(
