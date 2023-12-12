@@ -19,23 +19,33 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchRides();
   }
 
-  void fetchRides() {
-    database.child('Rides').once().then((DatabaseEvent event) {
-      if (event.snapshot.value != null) {
-        // Clear existing rides
-        rides.clear();
-        // Iterate through the fetched rides and add them to the list
-        Map<dynamic, dynamic>? ridesMap = event.snapshot.value as Map?;
-        if (ridesMap != null) {
-          ridesMap.forEach((key, value) {
-            rides.add(RideData.fromMap(value));
-          });
-        }
-        // Update the widget state to rebuild with the fetched ride data
-        setState(() {});
-      }
-    });
+  void fetchRides() async {
+    final event = await database.child('Rides').once();
+
+    if (event.snapshot.value != null) {
+      final ridesMap = event.snapshot.value as Map<dynamic, dynamic>;
+
+      // Clear existing rides
+      rides.clear();
+
+      // Use Future.wait to wait for all asynchronous calls
+      await Future.wait(ridesMap.entries.map((entry) async {
+        String driverId = entry.value['driverId'];
+        String driverName = await fetchDriverName(driverId);
+        rides.add(RideData.fromMap(entry.value, driverName));
+      }));
+
+      // Update the widget state to rebuild with the fetched ride data
+      setState(() {});
+    }
   }
+
+
+  Future<String> fetchDriverName(String driverId) async {
+    DatabaseEvent dataSnapshot = await database.child('Users').child(driverId).child('name').once();
+    return dataSnapshot.snapshot.value.toString();
+  }
+
 
 
   @override
@@ -101,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return RideCard(
                   car: rides[index].car,
                   destination: rides[index].destination,
-                  driverId: rides[index].driverId,
+                  driverName: rides[index].driverName,
                   period: rides[index].period,
                   price: rides[index].price,
                   source: rides[index].source,
@@ -141,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
 class RideCard extends StatelessWidget {
   final String car;
   final String destination;
-  final String driverId;
+  final String driverName; // Change to driverName
   final String period;
   final String price;
   final String source;
@@ -149,7 +159,7 @@ class RideCard extends StatelessWidget {
   RideCard({
     required this.car,
     required this.destination,
-    required this.driverId,
+    required this.driverName, // Change to driverName
     required this.period,
     required this.price,
     required this.source,
@@ -172,7 +182,7 @@ class RideCard extends StatelessWidget {
         color: Color(0xDFE0E2),
         child: ListTile(
           title: Text(
-            'Driver: $driverId',
+            'Driver: $driverName', // Change to driverName
             style: TextStyle(fontSize: 18, color: Color(0xFF73C2BE)),
           ),
           subtitle: Column(
@@ -206,10 +216,11 @@ class RideCard extends StatelessWidget {
   }
 }
 
+
 class RideData {
   final String car;
   final String destination;
-  final String driverId;
+  final String driverName; // Change to driverName
   final String period;
   final String price;
   final String source;
@@ -217,21 +228,22 @@ class RideData {
   RideData({
     required this.car,
     required this.destination,
-    required this.driverId,
+    required this.driverName, // Change to driverName
     required this.period,
     required this.price,
     required this.source,
   });
 
   // Factory method to create RideData from a Map
-  factory RideData.fromMap(Map<dynamic, dynamic> map) {
+  factory RideData.fromMap(Map<dynamic, dynamic> map, String driverName) {
     return RideData(
       car: map['car'] ?? '',
       destination: map['destination'] ?? '',
-      driverId: map['driverId'] ?? '',
+      driverName: driverName, // Update to use driverName
       period: map['period'] ?? '',
       price: map['price'] ?? '',
       source: map['source'] ?? '',
     );
   }
 }
+
