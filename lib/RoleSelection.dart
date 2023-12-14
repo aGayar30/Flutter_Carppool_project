@@ -80,7 +80,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       // Rider Side
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => HomeScreen()),
                       );
@@ -101,7 +101,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       // Driver Side
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => DriverDashboard()),

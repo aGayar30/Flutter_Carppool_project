@@ -29,7 +29,7 @@ class ProfilePage extends StatelessWidget {
             icon: Icon(Icons.edit , color: Color(0xFF73C2BE)),
             onPressed: () {
               // Navigate to the Edit Profile page
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EditProfilePage()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfilePage()));
             },
           ),
           IconButton(

@@ -3,6 +3,8 @@ import 'package:my_project/Profile.dart';
 import 'OrderTracking.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import 'RideDetailsPage.dart';
+
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -11,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final database = FirebaseDatabase.instance.reference();
   List<RideData> rides = []; // List to store ride data
+  String? selectedPeriod;
 
   @override
   void initState() {
@@ -32,7 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
       await Future.wait(ridesMap.entries.map((entry) async {
         String driverId = entry.value['driverId'];
         String driverName = await fetchDriverName(driverId);
-        rides.add(RideData.fromMap(entry.value, driverName));
+        String driverGrade = await fetchDriverGrade(driverId);
+        String driverPhoneNumber = await fetchDriverPhoneNumber(driverId);
+
+        // Check if the ride's period matches the selected period
+        if (selectedPeriod == null || entry.value['period'] == selectedPeriod) {
+          rides.add(RideData.fromMap(entry.value, driverName));
+        }
       }));
 
       // Update the widget state to rebuild with the fetched ride data
@@ -45,6 +54,19 @@ class _HomeScreenState extends State<HomeScreen> {
     DatabaseEvent dataSnapshot = await database.child('Users').child(driverId).child('name').once();
     return dataSnapshot.snapshot.value.toString();
   }
+
+  Future<String> fetchDriverGrade(String driverId) async {
+    DatabaseEvent dataSnapshot =
+    await database.child('Users').child(driverId).child('grade').once();
+    return dataSnapshot.snapshot.value.toString();
+  }
+
+  Future<String> fetchDriverPhoneNumber(String driverId) async {
+    DatabaseEvent dataSnapshot =
+    await database.child('Users').child(driverId).child('phoneNumber').once();
+    return dataSnapshot.snapshot.value.toString();
+  }
+
 
 
 
@@ -68,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Color(0xFF73C2BE),
             onPressed: () {
               // Navigate to the user's profile page
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfilePage()),
               );
@@ -83,23 +105,27 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                DropdownButton<String>(
-                  dropdownColor: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  items: ['Morning', 'Afternoon']
-                      .map((String value) => DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  ))
-                      .toList(),
-                  onChanged: (String? value) {
-                    // Handle dropdown selection if needed
-                  },
-                  hint: Text(
-                    'Select Time',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
+            DropdownButton<String>(
+            dropdownColor: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              items: ['Morning', 'Afternoon']
+                  .map((String value) => DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              ))
+                  .toList(),
+              onChanged: (String? value) {
+                // Handle dropdown selection
+                setState(() {
+                  selectedPeriod = value;
+                  fetchRides();
+                });
+              },
+              hint: Text(
+                'Select Time',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
               ],
             ),
           ),
@@ -115,6 +141,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   period: rides[index].period,
                   price: rides[index].price,
                   source: rides[index].source,
+                  ride:  RideData(car: rides[index].car,
+                      destination: rides[index].destination,
+                      driverName: rides[index].driverName,
+                      period: rides[index].period,
+                      price: rides[index].price,
+                      source: rides[index].source,
+                    driverGrade: rides[index].driverGrade,
+                    driverPhoneNumber: rides[index].driverPhoneNumber
+                  )
                 );
               },
             ),
@@ -128,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
           FloatingActionButton(
             onPressed: () {
               // Navigate to order tracking page
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => OrderTrackingPage()),
               );
@@ -155,6 +190,7 @@ class RideCard extends StatelessWidget {
   final String period;
   final String price;
   final String source;
+  final RideData ride;
 
   RideCard({
     required this.car,
@@ -163,11 +199,22 @@ class RideCard extends StatelessWidget {
     required this.period,
     required this.price,
     required this.source,
+    required this.ride
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+        onTap: () {
+      // Navigate to RideDetailsPage and pass the ride details
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RideDetailsPage(ride: ride),
+        ),
+      );
+    },
+    child: Container(
       margin: EdgeInsets.all(8.0),
       decoration: BoxDecoration(
         color: Color(0xDFE0E2),
@@ -212,26 +259,30 @@ class RideCard extends StatelessWidget {
           ),
         ),
       ),
+    )
     );
   }
 }
 
-
 class RideData {
   final String car;
   final String destination;
-  final String driverName; // Change to driverName
+  final String driverName;
   final String period;
   final String price;
   final String source;
+  final String driverGrade; // Add driverGrade
+  final String driverPhoneNumber; // Add driverPhoneNumber
 
   RideData({
     required this.car,
     required this.destination,
-    required this.driverName, // Change to driverName
+    required this.driverName,
     required this.period,
     required this.price,
     required this.source,
+    required this.driverGrade,
+    required this.driverPhoneNumber,
   });
 
   // Factory method to create RideData from a Map
@@ -239,11 +290,12 @@ class RideData {
     return RideData(
       car: map['car'] ?? '',
       destination: map['destination'] ?? '',
-      driverName: driverName, // Update to use driverName
+      driverName: driverName,
       period: map['period'] ?? '',
       price: map['price'] ?? '',
       source: map['source'] ?? '',
+      driverGrade: map['driverGrade'] ?? '', // Initialize driverGrade from the map
+      driverPhoneNumber: map['driverPhoneNumber'] ?? '', // Initialize driverPhoneNumber from the map
     );
   }
 }
-

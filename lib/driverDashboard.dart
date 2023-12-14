@@ -50,7 +50,6 @@ class _DriverDashboardState extends State<DriverDashboard> {
         title: Text(
           'Driver Dashboard',
           style: TextStyle(
-            fontSize: 32.0,
             fontWeight: FontWeight.bold,
             color: Color(0xFF73C2BE),
           ),
@@ -70,7 +69,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
             color: Color(0xFF73C2BE),
             onPressed: () {
               // Navigate to the user's profile page
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProfilePage()),
               );
