@@ -1,32 +1,44 @@
 import 'package:flutter/material.dart';
 import 'Profile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'rideInfo.dart';
+import 'ManageRequests.dart';
 
-class OrderTrackingPage extends StatefulWidget {
-  final String? currentUserId;
+class DriverRidesPage extends StatefulWidget {
   final DatabaseReference database;
 
-  OrderTrackingPage({required this.currentUserId, required this.database});
+  DriverRidesPage({required this.database});
 
   @override
-  _OrderTrackingPageState createState() => _OrderTrackingPageState();
+  _DriverRidesPageState createState() => _DriverRidesPageState();
 }
 
-class _OrderTrackingPageState extends State<OrderTrackingPage> {
-  List<RideData>? userRides; // Use nullable type to represent initial state
+class _DriverRidesPageState extends State<DriverRidesPage> {
+  List<RideData>? driverRides;
+  late String currentDriverId;
 
   @override
   void initState() {
     super.initState();
-    fetchUserRides();
+    fetchDriverId(); // Initialize currentDriverId in initState
+    fetchDriverRides();
   }
 
-  void fetchUserRides() async {
-    List<RideData> fetchedRides = await fetchRidesForUser(widget.currentUserId , widget.database);
+  void fetchDriverId() async {
+    // Get the current user's ID using FirebaseAuth
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        currentDriverId = user.uid;
+      });
+    }
+  }
+
+  void fetchDriverRides() async {
+    List<RideData> fetchedRides = await fetchRidesForDriver(currentDriverId, widget.database);
 
     setState(() {
-      userRides = fetchedRides;
+      driverRides = fetchedRides;
     });
   }
 
@@ -60,31 +72,30 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
       body: Column(
         children: [
           Expanded(
-            child: userRides == null
+            child: driverRides == null
                 ? Center(
               child: CircularProgressIndicator(),
             )
-                : userRides!.isEmpty
+                : driverRides!.isEmpty
                 ? Center(
-                  child: Text(
-                    'No rides yet, start requesting now!',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
-                    ),
-                )
+              child: Text(
+                'No rides assigned yet!',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+            )
                 : ListView.builder(
-              itemCount: userRides!.length,
+              itemCount: driverRides!.length,
               itemBuilder: (context, index) {
-                RideData ride = userRides![index];
+                RideData ride = driverRides![index];
+
 
                 return RideCard(
+                  period: ride.period,
                   from: ride.source,
                   to: ride.destination,
-                  driverName: ride.driverName,
                   car: ride.car,
                   price: ride.price,
-                  status: ride.status,
                   ride: ride,
-                  currentUserId: widget.currentUserId,
                 );
               },
             ),
@@ -95,38 +106,32 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
   }
 }
 
-
-
 class RideCard extends StatelessWidget {
+  final String period;
   final String from;
   final String to;
-  final String driverName;
   final String car;
   final String price;
-  final String status;
   final RideData ride;
-  final String? currentUserId;
 
   RideCard({
+    required this.period,
     required this.from,
     required this.to,
-    required this.driverName,
     required this.car,
     required this.price,
-    required this.status,
-    required this.ride,
-    required this.currentUserId,
+    required this.ride
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Navigate to RideInfoPage and pass the ride data and current user ID
+        // Navigate to RideInfoPage and pass the ride ID
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => RideInfo(ride: ride, currentUserId: currentUserId),
+            builder: (context) => ManageRequests(ride: ride),
           ),
         );
       },
@@ -144,14 +149,18 @@ class RideCard extends StatelessWidget {
           color: Color(0xC0FDFB),
           child: ListTile(
             title: Text(
-              '$from to $to',
+              '$period',
               style: TextStyle(color: Color(0xFF73C2BE)),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Driver: $driverName',
+                  'From: $from',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'To: $to',
                   style: TextStyle(color: Colors.white),
                 ),
                 Text(
@@ -162,10 +171,6 @@ class RideCard extends StatelessWidget {
                   'Price: $price',
                   style: TextStyle(color: Colors.white),
                 ),
-                Text(
-                  'Status: $status',
-                  style: TextStyle(color: Colors.white),
-                ),
               ],
             ),
           ),
@@ -174,8 +179,6 @@ class RideCard extends StatelessWidget {
     );
   }
 }
-
-
 
 class RideData {
   final String rideID;
@@ -188,7 +191,8 @@ class RideData {
   final String source;
   final String driverGrade;
   final String driverPhoneNumber;
-  final String status;
+  final Map<String, String> riderStates;
+
 
   RideData({
     required this.rideID,
@@ -201,10 +205,11 @@ class RideData {
     required this.source,
     required this.driverGrade,
     required this.driverPhoneNumber,
-    required this.status,
+    required this.riderStates,
   });
 
-  factory RideData.fromMapWithStatus(Map<dynamic, dynamic> map, String driverName, String driverGrade, String driverPhoneNumber, String rideID, String driverID, String status) {
+  // Factory method to create RideData from a Map
+  factory RideData.fromMap(Map<dynamic, dynamic> map, String driverName, String driverGrade, String driverPhoneNumber, String rideID, String driverID) {
     return RideData(
       rideID: rideID,
       car: map['car'] ?? '',
@@ -216,50 +221,75 @@ class RideData {
       source: map['source'] ?? '',
       driverGrade: driverGrade,
       driverPhoneNumber: driverPhoneNumber,
-      status: status,
+      riderStates: {
+        'rider1Id': map['rider1Id'] ?? '',
+        'rider1State': map['rider1State'] ?? '',
+        'rider2Id': map['rider2Id'] ?? '',
+        'rider2State': map['rider2State'] ?? '',
+        'rider3Id': map['rider3Id'] ?? '',
+        'rider3State': map['rider3State'] ?? '',
+        'rider4Id': map['rider4Id'] ?? '',
+        'rider4State': map['rider4State'] ?? '',
+      },
     );
   }
 }
 
-Future<List<RideData>> fetchRidesForUser(String? userId, DatabaseReference database) async {
-  List<RideData> userRides = [];
+Future<List<RideData>> fetchRidesForDriver(String driverId, DatabaseReference database) async {
+  List<RideData> driverRides = [];
 
-  // Fetch rides where the current user ID is present as one of the riders
+  // Fetch rides where the current user ID is the driver ID
   final ridesSnapshot = await database.child('Rides').once();
 
   if (ridesSnapshot.snapshot.value != null) {
     final ridesMap = ridesSnapshot.snapshot.value as Map<dynamic, dynamic>;
 
     for (var entry in ridesMap.entries) {
-      // Check if the user is one of the riders
-      for (int i = 1; i <= 4; i++) {
-        String riderId = entry.value['rider${i}Id'];
-        String riderState = entry.value['rider${i}State'];
+      String rideDriverId = entry.value['driverId'];
 
-        if (riderId == userId && riderState != 'none') {
-          String driverId = entry.value['driverId'];
-          String driverName = await fetchDriverName(driverId, database);
-          String driverGrade = await fetchDriverGrade(driverId, database);
-          String driverPhoneNumber = await fetchDriverPhoneNumber(driverId, database);
+      if (rideDriverId == driverId) {
+        String rider1Id = entry.value['rider1Id'];
+        String rider2Id = entry.value['rider2Id'];
+        String rider3Id = entry.value['rider3Id'];
+        String rider4Id = entry.value['rider4Id'];
+        String rider1State = entry.value['rider1State'];
+        String rider2State = entry.value['rider2State'];
+        String rider3State = entry.value['rider3State'];
+        String rider4State = entry.value['rider4State'];
 
-          RideData ride = RideData.fromMapWithStatus(
-            entry.value,
-            driverName,
-            driverGrade,
-            driverPhoneNumber,
-            entry.key,
-            driverId,
-            riderState,
-          );
+        // Assuming riderState can't be 'none' for more than one rider
+        String riderState = rider1State != 'none' ? rider1State : rider2State != 'none' ? rider2State : rider3State != 'none' ? rider3State : rider4State;
 
-          userRides.add(ride);
-          break; // Move to the next ride
+        String riderId;
+        if (riderState == rider1State) {
+          riderId = rider1Id;
+        } else if (riderState == rider2State) {
+          riderId = rider2Id;
+        } else if (riderState == rider3State) {
+          riderId = rider3Id;
+        } else {
+          riderId = rider4Id;
         }
+
+        String driverName = await fetchDriverName(driverId, database);
+        String driverGrade = await fetchDriverGrade(driverId, database);
+        String driverPhoneNumber = await fetchDriverPhoneNumber(driverId, database);
+
+        RideData ride = RideData.fromMap(
+          entry.value,
+          driverName,
+          driverGrade,
+          driverPhoneNumber,
+          entry.key,
+          driverId,
+        );
+
+        driverRides.add(ride);
       }
     }
   }
 
-  return userRides;
+  return driverRides;
 }
 
 Future<String> fetchDriverName(String driverId, DatabaseReference database) async {

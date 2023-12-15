@@ -28,6 +28,7 @@ class RideInfo extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             buildSectionTitle('Ride Details:'),
+            buildRow('Status', ride.status),
             buildRow('Car', ride.car),
             buildRow('Source', ride.source),
             buildRow('Destination', ride.destination),

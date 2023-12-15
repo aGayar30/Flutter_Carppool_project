@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:my_project/Profile.dart';
+import 'DriverRides.dart';
 import 'auth.dart';
 
 class DriverDashboard extends StatefulWidget {
@@ -16,6 +17,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
   final TextEditingController destinationController = TextEditingController();
   final TextEditingController carController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
+  final auth = Auth();
 
 
   @override
@@ -62,6 +64,17 @@ class _DriverDashboardState extends State<DriverDashboard> {
             onPressed: () {
               // Show tooltip with information
               showInformationDialog(context);
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.manage_history_rounded),
+            color: Color(0xFF73C2BE),
+            onPressed: () {
+              // Navigate to the Requests page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DriverRidesPage(database: database)),
+              );
             },
           ),
           IconButton(
