@@ -14,6 +14,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final database = FirebaseDatabase.instance.reference();
   List<RideData> rides = []; // List to store ride data
   String? selectedPeriod;
+  final auth = Auth();
 
   @override
   void initState() {
@@ -177,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Navigate to order tracking page
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => OrderTrackingPage()),
+                MaterialPageRoute(builder: (context) => OrderTrackingPage(currentUserId: auth.currentUser?.uid, database: database,)),
               );
             },
             child: Icon(Icons.history),

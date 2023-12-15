@@ -1,7 +1,33 @@
 import 'package:flutter/material.dart';
 import 'Profile.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-class OrderTrackingPage extends StatelessWidget {
+class OrderTrackingPage extends StatefulWidget {
+  final String? currentUserId;
+  final DatabaseReference database;
+
+  OrderTrackingPage({required this.currentUserId, required this.database});
+
+  @override
+  _OrderTrackingPageState createState() => _OrderTrackingPageState();
+}
+
+class _OrderTrackingPageState extends State<OrderTrackingPage> {
+  List<RideData> userRides = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserRides();
+  }
+
+  void fetchUserRides() async {
+    List<RideData> fetchedRides = await fetchRidesForUser(widget.currentUserId, widget.database);
+
+    setState(() {
+      userRides = fetchedRides;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +46,8 @@ class OrderTrackingPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.account_circle),
-            onPressed: ()  {
+            color: Color(0xFF73C2BE),
+            onPressed: () {
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
             },
           ),
@@ -28,33 +55,21 @@ class OrderTrackingPage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-
-            ),
-          ),
           Expanded(
-            child: ListView(
-              children: [
-                RideCard(
-                  from: 'From 1',
-                  to: 'To 1',
-                  driverName: 'Driver 1',
-                  car: 'Car 1',
-                  price: 'Price 1',
-                  status: 'Completed', // Hardcoded status
-                ),
-                RideCard(
-                  from: 'From 2',
-                  to: 'To 2',
-                  driverName: 'Driver 2',
-                  car: 'Car 2',
-                  price: 'Price 2',
-                  status: 'Confirmed', // Hardcoded status
-                ),
-              ],
+            child: ListView.builder(
+              itemCount: userRides.length,
+              itemBuilder: (context, index) {
+                RideData ride = userRides[index];
+
+                return RideCard(
+                  from: ride.source,
+                  to: ride.destination,
+                  driverName: ride.driverName,
+                  car: ride.car,
+                  price: ride.price,
+                  status: ride.status,
+                );
+              },
             ),
           ),
         ],
@@ -124,4 +139,104 @@ class RideCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class RideData {
+  final String rideID;
+  final String car;
+  final String destination;
+  final String driverID;
+  final String driverName;
+  final String period;
+  final String price;
+  final String source;
+  final String driverGrade;
+  final String driverPhoneNumber;
+  final String status;
+
+  RideData({
+    required this.rideID,
+    required this.car,
+    required this.destination,
+    required this.driverID,
+    required this.driverName,
+    required this.period,
+    required this.price,
+    required this.source,
+    required this.driverGrade,
+    required this.driverPhoneNumber,
+    required this.status,
+  });
+
+  factory RideData.fromMapWithStatus(Map<dynamic, dynamic> map, String driverName, String driverGrade, String driverPhoneNumber, String rideID, String driverID, String status) {
+    return RideData(
+      rideID: rideID,
+      car: map['car'] ?? '',
+      destination: map['destination'] ?? '',
+      driverID: driverID,
+      driverName: driverName,
+      period: map['period'] ?? '',
+      price: map['price'] ?? '',
+      source: map['source'] ?? '',
+      driverGrade: driverGrade,
+      driverPhoneNumber: driverPhoneNumber,
+      status: status,
+    );
+  }
+}
+
+Future<List<RideData>> fetchRidesForUser(String? userId, DatabaseReference database) async {
+  List<RideData> userRides = [];
+
+  // Fetch rides where the current user ID is present as one of the riders
+  final ridesSnapshot = await database.child('Rides').once();
+
+  if (ridesSnapshot.snapshot.value != null) {
+    final ridesMap = ridesSnapshot.snapshot.value as Map<dynamic, dynamic>;
+
+    for (var entry in ridesMap.entries) {
+      // Check if the user is one of the riders
+      for (int i = 1; i <= 4; i++) {
+        String riderId = entry.value['rider${i}Id'];
+        String riderState = entry.value['rider${i}State'];
+
+        if (riderId == userId && riderState != 'none') {
+          String driverId = entry.value['driverId'];
+          String driverName = await fetchDriverName(driverId, database);
+          String driverGrade = await fetchDriverGrade(driverId, database);
+          String driverPhoneNumber = await fetchDriverPhoneNumber(driverId, database);
+
+          RideData ride = RideData.fromMapWithStatus(
+            entry.value,
+            driverName,
+            driverGrade,
+            driverPhoneNumber,
+            entry.key,
+            driverId,
+            riderState,
+          );
+
+          userRides.add(ride);
+          break; // Move to the next ride
+        }
+      }
+    }
+  }
+
+  return userRides;
+}
+
+Future<String> fetchDriverName(String driverId, DatabaseReference database) async {
+  DatabaseEvent dataSnapshot = await database.child('Users').child(driverId).child('name').once();
+  return dataSnapshot.snapshot.value.toString();
+}
+
+Future<String> fetchDriverGrade(String driverId, DatabaseReference database) async {
+  DatabaseEvent dataSnapshot = await database.child('Users').child(driverId).child('grade').once();
+  return dataSnapshot.snapshot.value.toString();
+}
+
+Future<String> fetchDriverPhoneNumber(String driverId, DatabaseReference database) async {
+  DatabaseEvent dataSnapshot = await database.child('Users').child(driverId).child('phoneNumber').once();
+  return dataSnapshot.snapshot.value.toString();
 }

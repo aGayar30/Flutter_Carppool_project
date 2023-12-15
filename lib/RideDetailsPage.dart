@@ -66,12 +66,18 @@ class RideDetailsPage extends StatelessWidget {
 
     // Check if there are still free spaces
     String? freeRiderId = await findFreeRiderId();
-    if (freeRiderId != null) {
+
+    if (freeRiderId == 'Already booked'){
+      // Show an alert: "Already booked"
+      showAlert(context, "You already requested this ride");
+    }
+    else if (freeRiderId != null) {
       // Update the corresponding rider ID and rider state
       await updateRideWithRiderInfo(freeRiderId, currentUserId);
       // Show a success message or perform any additional action
       showAlert(context, "Ride requested successfully!");
-    } else {
+    }
+    else {
       // Show an alert: "Ride full"
       showAlert(context, "Ride full");
     }
@@ -85,6 +91,10 @@ class RideDetailsPage extends StatelessWidget {
 
       String riderIdValue = await fetchRideData(riderId);
 
+      //Check if the user already requested to avoid duplicate requests
+      if (riderIdValue == currentUserId){
+        return ('Already booked');
+      }
       if (riderIdValue == 'none') {
         // Stop iteration and return the free rider ID
         return riderId;
