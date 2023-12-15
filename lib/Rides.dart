@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_project/Profile.dart';
 import 'OrderTracking.dart';
 import 'package:firebase_database/firebase_database.dart';
-
+import 'auth.dart';
 import 'RideDetailsPage.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -40,7 +40,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Check if the ride's period matches the selected period
         if (selectedPeriod == null || entry.value['period'] == selectedPeriod) {
-          rides.add(RideData.fromMap(entry.value, driverName));
+          rides.add(RideData.fromMap(
+            entry.value,
+            driverName,
+            driverGrade,
+            driverPhoneNumber,
+            entry.key,
+            driverId,
+          ));
+
         }
       }));
 
@@ -48,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
     }
   }
+
 
 
   Future<String> fetchDriverName(String driverId) async {
@@ -141,15 +150,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   period: rides[index].period,
                   price: rides[index].price,
                   source: rides[index].source,
-                  ride:  RideData(car: rides[index].car,
-                      destination: rides[index].destination,
-                      driverName: rides[index].driverName,
-                      period: rides[index].period,
-                      price: rides[index].price,
-                      source: rides[index].source,
+                  ride: RideData(
+                    car: rides[index].car,
+                    destination: rides[index].destination,
+                    driverName: rides[index].driverName,
+                    period: rides[index].period,
+                    price: rides[index].price,
+                    source: rides[index].source,
                     driverGrade: rides[index].driverGrade,
-                    driverPhoneNumber: rides[index].driverPhoneNumber
-                  )
+                    driverPhoneNumber: rides[index].driverPhoneNumber,
+                    rideID: rides[index].rideID,
+                    driverID: rides[index].driverID,
+                  ),
                 );
               },
             ),
@@ -182,7 +194,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
 class RideCard extends StatelessWidget {
   final String car;
   final String destination;
@@ -191,6 +202,7 @@ class RideCard extends StatelessWidget {
   final String price;
   final String source;
   final RideData ride;
+  final auth = Auth();
 
   RideCard({
     required this.car,
@@ -199,84 +211,89 @@ class RideCard extends StatelessWidget {
     required this.period,
     required this.price,
     required this.source,
-    required this.ride
+    required this.ride,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: () {
-      // Navigate to RideDetailsPage and pass the ride details
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RideDetailsPage(ride: ride),
-        ),
-      );
-    },
-    child: Container(
-      margin: EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        color: Color(0xDFE0E2),
-        border: Border.all(
-          color: Colors.white,
-          width: 2.0,
-        ),
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      child: Card(
-        elevation: 0,
-        color: Color(0xDFE0E2),
-        child: ListTile(
-          title: Text(
-            'Driver: $driverName', // Change to driverName
-            style: TextStyle(fontSize: 18, color: Color(0xFF73C2BE)),
+      onTap: () {
+        // Navigate to RideDetailsPage and pass the ride details
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RideDetailsPage(ride: ride, currentUserId: auth.currentUser?.uid,),
           ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Car: $car',
-                style: TextStyle(fontSize: 15, color: Colors.white),
-              ),
-              Text(
-                'Source: $source',
-                style: TextStyle(fontSize: 15, color: Colors.white),
-              ),
-              Text(
-                'Destination: $destination',
-                style: TextStyle(fontSize: 15, color: Colors.white),
-              ),
-              Text(
-                'Period: $period',
-                style: TextStyle(fontSize: 15, color: Colors.white),
-              ),
-              Text(
-                'Price: $price',
-                style: TextStyle(fontSize: 15, color: Colors.white),
-              ),
-            ],
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.all(8.0),
+        decoration: BoxDecoration(
+          color: Color(0xDFE0E2),
+          border: Border.all(
+            color: Colors.white,
+            width: 2.0,
+          ),
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+        child: Card(
+          elevation: 0,
+          color: Color(0xDFE0E2),
+          child: ListTile(
+            title: Text(
+              'Driver: $driverName',
+              style: TextStyle(fontSize: 18, color: Color(0xFF73C2BE)),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Car: $car',
+                  style: TextStyle(fontSize: 15, color: Colors.white),
+                ),
+                Text(
+                  'Source: $source',
+                  style: TextStyle(fontSize: 15, color: Colors.white),
+                ),
+                Text(
+                  'Destination: $destination',
+                  style: TextStyle(fontSize: 15, color: Colors.white),
+                ),
+                Text(
+                  'Period: $period',
+                  style: TextStyle(fontSize: 15, color: Colors.white),
+                ),
+                Text(
+                  'Price: $price',
+                  style: TextStyle(fontSize: 15, color: Colors.white),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    )
     );
   }
 }
 
+
 class RideData {
+  final String rideID;
   final String car;
   final String destination;
+  final String driverID;
   final String driverName;
   final String period;
   final String price;
   final String source;
-  final String driverGrade; // Add driverGrade
-  final String driverPhoneNumber; // Add driverPhoneNumber
+  final String driverGrade;
+  final String driverPhoneNumber;
 
   RideData({
+    required this.rideID,
     required this.car,
     required this.destination,
+    required this.driverID,
     required this.driverName,
     required this.period,
     required this.price,
@@ -286,16 +303,18 @@ class RideData {
   });
 
   // Factory method to create RideData from a Map
-  factory RideData.fromMap(Map<dynamic, dynamic> map, String driverName) {
+  factory RideData.fromMap(Map<dynamic, dynamic> map, String driverName, String driverGrade, String driverPhoneNumber, String rideID, String driverID) {
     return RideData(
+      rideID: rideID,
       car: map['car'] ?? '',
       destination: map['destination'] ?? '',
+      driverID: driverID,
       driverName: driverName,
       period: map['period'] ?? '',
       price: map['price'] ?? '',
       source: map['source'] ?? '',
-      driverGrade: map['driverGrade'] ?? '', // Initialize driverGrade from the map
-      driverPhoneNumber: map['driverPhoneNumber'] ?? '', // Initialize driverPhoneNumber from the map
+      driverGrade: driverGrade,
+      driverPhoneNumber: driverPhoneNumber,
     );
   }
 }
