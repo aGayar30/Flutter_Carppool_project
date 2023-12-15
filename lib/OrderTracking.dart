@@ -13,7 +13,7 @@ class OrderTrackingPage extends StatefulWidget {
 }
 
 class _OrderTrackingPageState extends State<OrderTrackingPage> {
-  List<RideData> userRides = [];
+  List<RideData>? userRides; // Use nullable type to represent initial state
 
   @override
   void initState() {
@@ -22,7 +22,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
   }
 
   void fetchUserRides() async {
-    List<RideData> fetchedRides = await fetchRidesForUser(widget.currentUserId, widget.database);
+    List<RideData> fetchedRides = await fetchRidesForUser(widget.currentUserId , widget.database);
 
     setState(() {
       userRides = fetchedRides;
@@ -48,7 +48,10 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
             icon: Icon(Icons.account_circle),
             color: Color(0xFF73C2BE),
             onPressed: () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage()),
+              );
             },
           ),
         ],
@@ -56,10 +59,21 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: userRides.length,
+            child: userRides == null
+                ? Center(
+              child: CircularProgressIndicator(),
+            )
+                : userRides!.isEmpty
+                ? Center(
+              child: Text(
+                'No rides yet, start requesting now!',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+            )
+                : ListView.builder(
+              itemCount: userRides!.length,
               itemBuilder: (context, index) {
-                RideData ride = userRides[index];
+                RideData ride = userRides![index];
 
                 return RideCard(
                   from: ride.source,
@@ -77,6 +91,9 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
     );
   }
 }
+
+
+
 
 class RideCard extends StatelessWidget {
   final String from;
