@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'Profile.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'rideInfo.dart';
 
 class OrderTrackingPage extends StatefulWidget {
   final String? currentUserId;
@@ -82,6 +83,8 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                   car: ride.car,
                   price: ride.price,
                   status: ride.status,
+                  ride: ride,
+                  currentUserId: widget.currentUserId,
                 );
               },
             ),
@@ -94,7 +97,6 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
 
 
 
-
 class RideCard extends StatelessWidget {
   final String from;
   final String to;
@@ -102,6 +104,8 @@ class RideCard extends StatelessWidget {
   final String car;
   final String price;
   final String status;
+  final RideData ride;
+  final String? currentUserId;
 
   RideCard({
     required this.from,
@@ -110,53 +114,68 @@ class RideCard extends StatelessWidget {
     required this.car,
     required this.price,
     required this.status,
+    required this.ride,
+    required this.currentUserId,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.white,
-          width: 2.0,
-        ),
-        borderRadius: BorderRadius.circular(10.0),
-      ),
-      child: Card(
-        elevation: 0,
-        color: Color(0xC0FDFB),
-        child: ListTile(
-          title: Text(
-            '$from to $to',
-            style: TextStyle(color: Color(0xFF73C2BE)),
+    return GestureDetector(
+      onTap: () {
+        // Navigate to RideInfoPage and pass the ride data and current user ID
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RideInfo(ride: ride, currentUserId: currentUserId),
           ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Driver: $driverName',
-                style: TextStyle(color: Colors.white),
-              ),
-              Text(
-                'Car: $car',
-                style: TextStyle(color: Colors.white),
-              ),
-              Text(
-                'Price: $price',
-                style: TextStyle(color: Colors.white),
-              ),
-              Text(
-                'Status: $status',
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.all(8.0),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.white,
+            width: 2.0,
+          ),
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: Card(
+          elevation: 0,
+          color: Color(0xC0FDFB),
+          child: ListTile(
+            title: Text(
+              '$from to $to',
+              style: TextStyle(color: Color(0xFF73C2BE)),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Driver: $driverName',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Car: $car',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Price: $price',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Status: $status',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
+
+
 
 class RideData {
   final String rideID;
