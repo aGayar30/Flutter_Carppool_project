@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'OrderTracking.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class RideInfo extends StatelessWidget {
   final RideData ride;
-  final String? currentUserId; // Add this variable
+  final String? currentUserId;
+  final  DateFormat dateFormat = DateFormat('dd/MM/yyyy');
 
   RideInfo({
     required this.ride,
@@ -33,6 +35,7 @@ class RideInfo extends StatelessWidget {
             buildRow('Source', ride.source),
             buildRow('Destination', ride.destination),
             buildRow('Period', ride.period),
+            buildRow('Date', dateFormat.format(ride.date)),
             buildRow('Price', ride.price),
             buildSectionTitle('Driver Details:'),
             buildRow('Driver Name', ride.driverName),

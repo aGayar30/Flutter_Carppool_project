@@ -154,6 +154,7 @@ class _ManageRequestsState extends State<ManageRequests> {
     // Update the rider state to 'confirmed' in the database
     DatabaseReference riderRef = FirebaseDatabase.instance.reference().child('Rides').child(ride.rideID);
     riderRef.update({'rider${riderNumber}State': 'confirmed'}).then((_) {
+      fetchRiderInfo(ride.rideID);
       // Reload the page and update the UI
       Navigator.pushReplacement(
         context,
@@ -169,6 +170,7 @@ class _ManageRequestsState extends State<ManageRequests> {
       'rider${riderNumber}Id': 'none',
       'rider${riderNumber}State': 'none',
     }).then((_) {
+      fetchRiderInfo(ride.rideID);
       // Reload the page and update the UI
       Navigator.pushReplacement(
         context,

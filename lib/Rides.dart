@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:my_project/Profile.dart';
 import 'OrderTracking.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -162,6 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     driverPhoneNumber: rides[index].driverPhoneNumber,
                     rideID: rides[index].rideID,
                     driverID: rides[index].driverID,
+                    date: rides[index].date
                   ),
                 );
               },
@@ -204,6 +206,8 @@ class RideCard extends StatelessWidget {
   final String source;
   final RideData ride;
   final auth = Auth();
+  final  DateFormat dateFormat = DateFormat('dd/MM/yyyy');
+
 
   RideCard({
     required this.car,
@@ -248,6 +252,7 @@ class RideCard extends StatelessWidget {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
                 Text(
                   'Car: $car',
                   style: TextStyle(fontSize: 15, color: Colors.white),
@@ -262,6 +267,10 @@ class RideCard extends StatelessWidget {
                 ),
                 Text(
                   'Period: $period',
+                  style: TextStyle(fontSize: 15, color: Colors.white),
+                ),
+                Text(
+                  'Date: ${dateFormat.format(ride.date)}',
                   style: TextStyle(fontSize: 15, color: Colors.white),
                 ),
                 Text(
@@ -289,6 +298,7 @@ class RideData {
   final String source;
   final String driverGrade;
   final String driverPhoneNumber;
+  final DateTime date;
 
   RideData({
     required this.rideID,
@@ -301,6 +311,7 @@ class RideData {
     required this.source,
     required this.driverGrade,
     required this.driverPhoneNumber,
+    required this.date
   });
 
   // Factory method to create RideData from a Map
@@ -316,6 +327,7 @@ class RideData {
       source: map['source'] ?? '',
       driverGrade: driverGrade,
       driverPhoneNumber: driverPhoneNumber,
+      date: map['date'] != null ? DateTime.parse(map['date']) : DateTime.now(), // Parse date from the map
     );
   }
 }

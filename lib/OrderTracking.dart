@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'Profile.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'rideInfo.dart';
@@ -106,6 +107,8 @@ class RideCard extends StatelessWidget {
   final String status;
   final RideData ride;
   final String? currentUserId;
+  final  DateFormat dateFormat = DateFormat('dd/MM/yyyy');
+
 
   RideCard({
     required this.from,
@@ -159,6 +162,10 @@ class RideCard extends StatelessWidget {
                   style: TextStyle(color: Colors.white),
                 ),
                 Text(
+                  'Date: ${ dateFormat.format(ride.date)}',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
                   'Price: $price',
                   style: TextStyle(color: Colors.white),
                 ),
@@ -189,6 +196,7 @@ class RideData {
   final String driverGrade;
   final String driverPhoneNumber;
   final String status;
+  final DateTime date;
 
   RideData({
     required this.rideID,
@@ -202,6 +210,7 @@ class RideData {
     required this.driverGrade,
     required this.driverPhoneNumber,
     required this.status,
+    required this.date
   });
 
   factory RideData.fromMapWithStatus(Map<dynamic, dynamic> map, String driverName, String driverGrade, String driverPhoneNumber, String rideID, String driverID, String status) {
@@ -217,6 +226,7 @@ class RideData {
       driverGrade: driverGrade,
       driverPhoneNumber: driverPhoneNumber,
       status: status,
+      date: map['date'] != null ? DateTime.parse(map['date']) : DateTime.now(), // Parse date from the map
     );
   }
 }
