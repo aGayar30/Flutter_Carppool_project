@@ -28,7 +28,7 @@ class RoleSelectionScreen extends StatelessWidget {
     if (user != null) {
       var email = user?.email;
       // Create a new user node with dummy data
-      await database.child('Users').child(user.uid).set({
+        await database.child('Users').child(user.uid).set({
         'name': 'your name',
         'age': 1,
         'grade': 'your grade',
