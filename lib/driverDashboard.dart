@@ -17,6 +17,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
   final TextEditingController destinationController = TextEditingController();
   final TextEditingController carController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
+  DateTime? selectedDate;
   final auth = Auth();
 
 
@@ -166,9 +167,60 @@ class _DriverDashboardState extends State<DriverDashboard> {
                 hintStyle: TextStyle(color: Colors.white54),
               ),
             ),
-            SizedBox(height: 30.0),
+            SizedBox(height: 16.0),
+
             ElevatedButton(
               onPressed: () {
+                // Show date picker
+                showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime(2101), // Set a distant future date
+                ).then((pickedDate) {
+                  // Update selected date
+                  if (pickedDate != null && pickedDate != selectedDate) {
+                    setState(() {
+                      selectedDate = pickedDate;
+                    });
+                  }
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xFF73C2BE),
+              ),
+              child: Text('Select Date'),
+            ),
+
+            SizedBox(height: 30.0),
+
+            ElevatedButton(
+              onPressed: () {
+                // Check if a date is selected
+                if (selectedDate == null || selectedDate!.isBefore(DateTime.now())) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        backgroundColor: Color(0xFF73C2BE),
+                        title: Text('Error', style: TextStyle(color: Colors.white)),
+                        content: Text('Please select a valid future date.',
+                          style: TextStyle(color: Color(0xFF495159)),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: Text('OK', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  return;
+                }
+
                 // Submit ride details to the Firebase Realtime Database
                 submitRideDetails();
               },
@@ -194,6 +246,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
     String source = sourceController.text.trim();
     String destination = destinationController.text.trim();
     String price = priceController.text.trim();
+    DateTime? date = selectedDate;
 
     // Validate input fields (you may want to add more validation)
     if (car.isEmpty || period.isEmpty || source.isEmpty ||
@@ -264,8 +317,12 @@ class _DriverDashboardState extends State<DriverDashboard> {
       'source': source,
       'destination': destination,
       'price': price,
-    }).then((_) => print("Ride added successfully!"));
+      'date': date?.toIso8601String()
+    }).then((_) { print("ride added succesfuly");
+        showSuccessDialog(context);}
+    );
 
+    showSuccessDialog(context);
     // Clear text fields after submitting
     periodController.clear();
     sourceController.clear();
@@ -290,6 +347,28 @@ class _DriverDashboardState extends State<DriverDashboard> {
                 Navigator.pop(context);
               },
               child: Text('OK' , style: TextStyle(color: Colors.white,),)
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF73C2BE),
+          title: Text('Information', style: TextStyle(color: Colors.white)),
+          content: Text('Ride Added Succesfuly!',
+            style: TextStyle(color: Color(0xFF495159)),),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK' , style: TextStyle(color: Colors.white,),)
             ),
           ],
         );

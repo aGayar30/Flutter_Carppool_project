@@ -3,6 +3,8 @@ import 'Profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'ManageRequests.dart';
+import 'package:intl/intl.dart';
+
 
 class DriverRidesPage extends StatefulWidget {
   final DatabaseReference database;
@@ -113,6 +115,7 @@ class RideCard extends StatelessWidget {
   final String car;
   final String price;
   final RideData ride;
+  final DateFormat dateFormat = DateFormat('dd/MM/yyyy');
 
   RideCard({
     required this.period,
@@ -125,6 +128,8 @@ class RideCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String formattedDate = dateFormat.format(ride.date);
+
     return GestureDetector(
       onTap: () {
         // Navigate to RideInfoPage and pass the ride ID
@@ -171,6 +176,10 @@ class RideCard extends StatelessWidget {
                   'Price: $price',
                   style: TextStyle(color: Colors.white),
                 ),
+                Text(
+                  'Date: $formattedDate',
+                  style: TextStyle(color: Colors.white),
+                ),
               ],
             ),
           ),
@@ -192,6 +201,8 @@ class RideData {
   final String driverGrade;
   final String driverPhoneNumber;
   final Map<String, String> riderStates;
+  final DateTime date;
+
 
 
   RideData({
@@ -206,6 +217,7 @@ class RideData {
     required this.driverGrade,
     required this.driverPhoneNumber,
     required this.riderStates,
+    required this.date
   });
 
   // Factory method to create RideData from a Map
@@ -221,6 +233,7 @@ class RideData {
       source: map['source'] ?? '',
       driverGrade: driverGrade,
       driverPhoneNumber: driverPhoneNumber,
+      date: map['date'] != null ? DateTime.parse(map['date']) : DateTime.now(), // Parse date from the map
       riderStates: {
         'rider1Id': map['rider1Id'] ?? '',
         'rider1State': map['rider1State'] ?? '',

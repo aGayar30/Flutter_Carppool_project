@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'DriverRides.dart';
@@ -17,138 +17,105 @@ class _ManageRequestsState extends State<ManageRequests> {
   final DatabaseReference database = FirebaseDatabase.instance.reference();
   List<Map<String, String>> ridersList = [];
   final RideData ride;
+  final  DateFormat dateFormat = DateFormat('dd/MM/yyyy');
 
   _ManageRequestsState({required this.ride});
 
   @override
   void initState() {
     super.initState();
-    updateRidersList();
   }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: Color(0xFF495159),
         appBar: AppBar(
-          backgroundColor: Color(0xFF495159),
-          title: Text('Manage Requests', style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF73C2BE),),)
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Period: ${ride.period}',style: TextStyle(color: Colors.white),),
-            Text('From: ${ride.source}',style: TextStyle(color: Colors.white)),
-            Text('To: ${ride.destination}',style: TextStyle(color: Colors.white)),
-            Text('Car: ${ride.car}',style: TextStyle(color: Colors.white)),
-            Text('Price: ${ride.price}',style: TextStyle(color: Colors.white)),
-            SizedBox(height: 16.0),
-            Text(
-              'Riders and States:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF73C2BE)),
-            ),
-            SizedBox(height: 8.0),
-            // Display rider information only if riderId is not 'none'
-            for (int i = 1; i <= 4; i++)
-              if (ride.riderStates.containsKey('rider${i}Id') &&
-                  ride.riderStates['rider${i}Id'] != 'none')
-                FutureBuilder<Map<String, String>>(
-                  future: fetchRiderInfo(ride.rideID),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
-                    } else if (snapshot.hasError) {
-                      return Text('Error loading rider information');
-                    } else if (snapshot.hasData) {
-                      String riderStatus = ride.riderStates['rider${i}State']!;
-                      String riderInfo = snapshot.data!['rider$i']!;
-
-                      return GestureDetector(
-                        onTap: () {
-                          // Show popup dialog based on rider's status
-                          if (riderStatus == 'requested') {
-                            // If rider status is 'requested', show accept/reject dialog
-                            showAcceptRejectDialog(context, riderInfo, i);
-                          } else if (riderStatus == 'confirmed') {
-                            // If rider status is 'confirmed', show 'already accepted' dialog
-                            showAlreadyAcceptedDialog(context);
-                          }
-                        },
-                    child: Container(
-                    margin: EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                    border: Border.all(
-                    color: Colors.white,
-                    width: 2.0,
-                    ),
-                    borderRadius: BorderRadius.circular(10.0),
-                    ),
-                        child: Card(
-                          elevation: 0,
-                          color: Color(0xC0FDFB),
-                          // Add card details here, e.g., ListTile with riderInfo
-                          child: ListTile(
-                            title: Text('Rider $i',style: TextStyle( color: Color(0xFF73C2BE))),
-                            subtitle: Column (crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 8.0),
-                                Text(riderInfo, style: TextStyle(color: Colors.white)),
-                                SizedBox(height: 8.0),
-                                Text('State: $riderStatus', style: TextStyle(color: Colors.white)),
-                              ],)
-                          ),
-                        ),
-                      )
-                      );
-                    } else {
-                      return Text('Rider $i: Loading...');
-                    }
-                  },
-                ),
-          ],
+            backgroundColor: Color(0xFF495159),
+            title: Text('Manage Requests', style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF73C2BE),),)
         ),
-      ),
-      )
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Date: ${dateFormat.format(ride.date)}',style: TextStyle(color: Colors.white)),
+                Text('Period: ${ride.period}',style: TextStyle(color: Colors.white),),
+                Text('From: ${ride.source}',style: TextStyle(color: Colors.white)),
+                Text('To: ${ride.destination}',style: TextStyle(color: Colors.white)),
+                Text('Car: ${ride.car}',style: TextStyle(color: Colors.white)),
+                Text('Price: ${ride.price}',style: TextStyle(color: Colors.white)),
+                SizedBox(height: 16.0),
+                Text(
+                  'Riders and States:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF73C2BE)),
+                ),
+                SizedBox(height: 8.0),
+                // Display rider information only if riderId is not 'none'
+                for (int i = 1; i <= 4; i++)
+                  if (ride.riderStates.containsKey('rider${i}Id') &&
+                      ride.riderStates['rider${i}Id'] != 'none')
+                    FutureBuilder<Map<String, String>>(
+                      future: fetchRiderInfo(ride.rideID),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return CircularProgressIndicator();
+                        } else if (snapshot.hasError) {
+                          return Text('Error loading rider information');
+                        } else if (snapshot.hasData) {
+                          String riderStatus = ride.riderStates['rider${i}State']!;
+                          String riderInfo = snapshot.data!['rider$i']!;
+
+                          return GestureDetector(
+                            onTap: () {
+                              if (riderStatus == 'requested') {
+                                showAcceptRejectDialog(context, riderInfo, i);
+                              } else if (riderStatus == 'confirmed') {
+                                showAlreadyAcceptedDialog(context);
+                              }
+                            },
+                            child: Container(
+                              margin: EdgeInsets.all(8.0),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2.0,
+                                ),
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              child: Card(
+                                elevation: 0,
+                                color: Color(0xC0FDFB),
+                                child: ListTile(
+                                  title: Text('Rider $i', style: TextStyle(color: Color(0xFF73C2BE))),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: 8.0),
+                                      Text(riderInfo, style: TextStyle(color: Colors.white)),
+                                      SizedBox(height: 8.0),
+                                      Text('State: $riderStatus', style: TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return Text('Rider $i: Loading...');
+                        }
+                      },
+                    ),
+
+              ],
+            ),
+          ),
+        )
     );
   }
 
-  void updateRidersList() async {
-    DatabaseReference rideRef = FirebaseDatabase.instance.reference().child('Rides').child(widget.ride.rideID);
-
-    try {
-      DataSnapshot snapshot = (await rideRef.once()) as DataSnapshot;
-      if (snapshot.value != null) {
-        final rideData = snapshot.value as Map<dynamic, dynamic>;
-
-        // Clear the existing list
-        ridersList.clear();
-
-        // Fetch and add the rider information to the list
-        for (int i = 1; i <= 4; i++) {
-          String riderId = rideData['rider${i}Id'];
-          String riderState = rideData['rider${i}State'];
-
-          if (riderState != 'none') {
-            String riderInfo = (await fetchRiderInfo(riderId)) as String;
-            // Add rider information to the list
-            ridersList.add({'rider$i': riderInfo});
-          }
-        }
-
-        // Call setState to update the UI
-        if (mounted) {
-          setState(() {});
-        }
-      }
-    } catch (error) {
-      // Handle any errors that might occur during the database operation
-      print('Error updating riders list: $error');
-    }
-  }
 
 
   void showAcceptRejectDialog(BuildContext context, String riderInfo, int i) {
@@ -164,7 +131,6 @@ class _ManageRequestsState extends State<ManageRequests> {
             TextButton(
               onPressed: () {
                 acceptRider(i);
-                updateRidersList();
                 Navigator.of(context).pop(); // Close the dialog
               },
               child: Text('Accept', style: TextStyle(color: Colors.white)),
@@ -172,7 +138,6 @@ class _ManageRequestsState extends State<ManageRequests> {
             TextButton(
               onPressed: () {
                 rejectRider(i);
-                updateRidersList();
                 Navigator.of(context).pop(); // Close the dialog
               },
               child: Text('Reject', style: TextStyle(color: Colors.white)),
@@ -189,10 +154,11 @@ class _ManageRequestsState extends State<ManageRequests> {
     // Update the rider state to 'confirmed' in the database
     DatabaseReference riderRef = FirebaseDatabase.instance.reference().child('Rides').child(ride.rideID);
     riderRef.update({'rider${riderNumber}State': 'confirmed'}).then((_) {
-      // Call setState to trigger a rebuild of the UI
-      if (mounted) {
-        setState(() {});
-      }
+      // Reload the page and update the UI
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ManageRequests(ride: ride)),
+      );
     });
   }
 
@@ -203,12 +169,14 @@ class _ManageRequestsState extends State<ManageRequests> {
       'rider${riderNumber}Id': 'none',
       'rider${riderNumber}State': 'none',
     }).then((_) {
-      // Call setState to trigger a rebuild of the UI
-      if (mounted) {
-        setState(() {});
-      }
+      // Reload the page and update the UI
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ManageRequests(ride: ride)),
+      );
     });
   }
+
 
 
 
