@@ -10,7 +10,6 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final Auth _auth = Auth();
   final DatabaseReference _userReference = FirebaseDatabase.instance.reference().child('Users');
   User? user = Auth().currentUser;
 

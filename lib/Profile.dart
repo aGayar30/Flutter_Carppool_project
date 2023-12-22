@@ -4,11 +4,67 @@ import 'package:flutter/material.dart';
 import 'auth.dart';
 import 'main.dart';
 import 'EditProfile.dart';
+import 'LocalDB.dart';
+import 'package:connectivity/connectivity.dart';
 
 class ProfilePage extends StatelessWidget {
   final Auth _auth = Auth();
   final DatabaseReference _userReference = FirebaseDatabase.instance.reference().child('Users');
   User? user = Auth().currentUser;
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  Future<void> _updateLocalDatabase(Map<String, dynamic> userData) async {
+    await _dbHelper.insertOrUpdateUserProfile(userData);
+  }
+
+  Future<Map<String, dynamic>> _fetchUserProfile() async {
+    // Check if there is internet connectivity
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      // No internet, fetch user profile from local database
+      print("got this from local db");
+      return _dbHelper.getUserProfile();
+    } else {
+      // Internet is available, fetch user profile from Firebase
+      DataSnapshot dataSnapshot = (await _userReference.child(user?.uid ?? '').once()).snapshot;
+      Map<dynamic, dynamic>? userData = dataSnapshot.value as Map<dynamic, dynamic>?;
+
+      if (userData != null) {
+        // Convert userData to Map<String, dynamic>
+        Map<String, dynamic> userDataMap = Map<String, dynamic>.from(userData);
+
+        // Update local database
+        await _updateLocalDatabase(userDataMap);
+
+        return userDataMap;
+      }
+    }
+
+    // Return an empty map if no data is available
+    return {};
+  }
+
+  void showOfflineDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF73C2BE),
+          title: Text('Information', style: TextStyle(color: Colors.white)),
+          content: Text('You are offline',
+            style: TextStyle(color: Color(0xFF495159)),),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK' , style: TextStyle(color: Colors.white,),)
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,24 +82,35 @@ class ProfilePage extends StatelessWidget {
         backgroundColor: Color(0xFF495159),
         actions: [
           IconButton(
-            icon: Icon(Icons.edit , color: Color(0xFF73C2BE)),
-            onPressed: () {
+            icon: Icon(Icons.edit, color: Color(0xFF73C2BE)),
+            onPressed: () async {
+              var connectivityResult = await Connectivity().checkConnectivity();
+              if (connectivityResult == ConnectivityResult.none) {
+                showOfflineDialog(context);
+              }
+              else
               // Navigate to the Edit Profile page
               Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfilePage()));
             },
           ),
           IconButton(
-            icon: Icon(Icons.exit_to_app , color: Color(0xFF73C2BE)),
+            icon: Icon(Icons.exit_to_app, color: Color(0xFF73C2BE)),
             onPressed: () async {
-              await _auth.signOut();
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyApp()));
-            },
+              var connectivityResult = await Connectivity().checkConnectivity();
+              if (connectivityResult == ConnectivityResult.none) {
+                showOfflineDialog(context);
+              }else {
+                await _auth.signOut();
+                Navigator.pushReplacement(
+                    context, MaterialPageRoute(builder: (context) => MyApp()));
+              }
+              },
           ),
         ],
       ),
       body: Center(
-        child: FutureBuilder<DatabaseEvent>(
-          future: _userReference.child(user?.uid ?? '').once(),
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _fetchUserProfile(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return CircularProgressIndicator();
@@ -51,10 +118,7 @@ class ProfilePage extends StatelessWidget {
               return Text('Error: ${snapshot.error}');
             } else {
               // Access user data from the snapshot
-              DataSnapshot dataSnapshot = snapshot.data!.snapshot;
-              Map<dynamic, dynamic>? userData = dataSnapshot.value as Map<dynamic, dynamic>?;
-
-              if (user != null && userData != null) {
+              Map<String, dynamic> userData = snapshot.data ?? {};
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,9 +171,7 @@ class ProfilePage extends StatelessWidget {
                     style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ],
-              );} else {
-                return Text('Error: User data is null or not a Map. ${user?.uid?? ''}');
-              }
+              );
             }
           },
         ),

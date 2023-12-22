@@ -1,5 +1,7 @@
+import 'package:connectivity/connectivity.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:my_project/Profile.dart';
 import 'package:my_project/auth.dart';
 import 'package:my_project/firebase_options.dart';
 import 'RoleSelection.dart';
@@ -89,6 +91,12 @@ class LoginPage extends StatelessWidget {
                 String email = emailController.text.trim();
                 String password = passwordController.text.trim();
 
+                var connectivityResult = await Connectivity().checkConnectivity();
+                if (connectivityResult == ConnectivityResult.none) {
+                  showOfflineDialog(context);
+                }
+                else
+
                 try {
                   await  _auth.signInWithEmailAndPassword(
                     email: email,
@@ -126,5 +134,29 @@ class LoginPage extends StatelessWidget {
       )
     );
   }
+  void showOfflineDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF73C2BE),
+          title: Text('Information', style: TextStyle(color: Colors.white)),
+          content: Text('You are offline\n\nYou can view you profile',
+            style: TextStyle(color: Color(0xFF495159)),),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+
+                },
+                child: Text('OK' , style: TextStyle(color: Colors.white,),)
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   }
 
