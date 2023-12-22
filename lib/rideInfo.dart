@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'OrderTracking.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'paymentPage.dart';
 
 class RideInfo extends StatelessWidget {
   final RideData ride;
@@ -41,9 +42,57 @@ class RideInfo extends StatelessWidget {
             buildRow('Driver Name', ride.driverName),
             buildRow('Driver Grade', ride.driverGrade),
             buildRow('Driver Phone Number', ride.driverPhoneNumber),
+
+          SizedBox(height: 26.0),
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                //check if ride status is confirmed
+                if (ride.status == 'confirmed'){
+                  // GOTO Payment page
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentPage( price: ride.price)));
+                }
+                else if (ride.status == 'requested'){
+                  //show alert 'ride not yet confirmed' and don't go
+                  showAlertDialog(context, "ride not yet confirmed");
+                }
+                else{
+                  //show alert 'already payed'
+                  showAlertDialog(context, "already payed");
+
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xFF73C2BE),
+              ),
+              child: Text('Pay'),
+            ),
+          ),
           ],
         ),
       ),
+    );
+  }
+
+  void showAlertDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF73C2BE),
+          title: Text('Information', style: TextStyle(color: Colors.white)),
+          content: Text('${message}',
+            style: TextStyle(color: Color(0xFF495159)),),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK' , style: TextStyle(color: Colors.white,),)
+            ),
+          ],
+        );
+      },
     );
   }
 

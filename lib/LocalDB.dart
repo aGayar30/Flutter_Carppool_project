@@ -15,17 +15,17 @@ class DatabaseHelper {
   Future<void> _createDatabase(Database db, int version) async {
     await db.execute('''
       CREATE TABLE $tableName(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-            profilePictureUrl TEXT,
-        name TEXT,
-        age TEXT,
-        grade TEXT,
-        address TEXT,
-        email TEXT,
-        phoneNumber TEXT,
-        major TEXT,
-        carType TEXT
-      )
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      age TEXT,
+      grade TEXT,
+      address TEXT,
+      email TEXT,
+      phoneNumber TEXT,
+      major TEXT,
+      carType TEXT,
+      profilePictureUrl TEXT
+    )
     ''');
   }
 
