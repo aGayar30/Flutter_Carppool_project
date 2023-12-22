@@ -67,23 +67,62 @@ class RideDetailsPage extends StatelessWidget {
       return;
     }
 
+    // Check TimeConstraint from the database
+    int? timeConstraint = await fetchTimeConstraint();
+
+    if (timeConstraint == 1) {
+      // Check if the time constraints are met for morning and afternoon rides
+      if (ride.period == 'Morning') {
+        if (!checkMorningRideTimeConstraint()) {
+          showAlert(context,
+              "Time constraints not met. Cannot request a ride at this time.");
+          return;
+          }
+      }
+      else if (!checkAfternoonRideTimeConstraint()) {
+        showAlert(context, "Time constraints not met. Cannot request a ride at this time.");
+        return;
+      }
+    }
+
     // Check if there are still free spaces
     String? freeRiderId = await findFreeRiderId();
 
-    if (freeRiderId == 'Already booked'){
+    if (freeRiderId == 'Already booked') {
       // Show an alert: "Already booked"
       showAlert(context, "You already requested this ride");
-    }
-    else if (freeRiderId != null) {
+    } else if (freeRiderId != null) {
       // Update the corresponding rider ID and rider state
       await updateRideWithRiderInfo(freeRiderId, currentUserId);
       // Show a success message or perform any additional action
       showAlert(context, "Ride requested successfully!");
-    }
-    else {
+    } else {
       // Show an alert: "Ride full"
       showAlert(context, "Ride full");
     }
+  }
+
+  bool checkMorningRideTimeConstraint() {
+    // Check if the current time is before 10:30 PM the day before the ride
+    DateTime now = DateTime.now();
+    DateTime rideDate = ride.date.subtract(Duration(days: 1));
+    DateTime constraintTime = DateTime(rideDate.year, rideDate.month, rideDate.day, 22, 30);
+
+    return now.isBefore(constraintTime);
+  }
+
+  bool checkAfternoonRideTimeConstraint() {
+    // Check if the current time is before 1 PM on the day of the ride
+    DateTime now = DateTime.now();
+    DateTime constraintTime = DateTime(ride.date.year, ride.date.month, ride.date.day, 13, 0);
+
+    return now.isBefore(constraintTime);
+  }
+
+  Future<int?> fetchTimeConstraint() async {
+    // Fetch TimeConstraint value from the database
+    DatabaseEvent dataSnapshot = await database.child('TimeConstraint').once();
+    return dataSnapshot.snapshot.value as int?;
   }
 
   Future<String?> findFreeRiderId() async {
