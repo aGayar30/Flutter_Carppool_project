@@ -4,9 +4,26 @@ import 'driverDashboard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-class RoleSelectionScreen extends StatelessWidget {
+class RoleSelectionScreen extends StatefulWidget {
+  @override
+  _RoleSelectionScreenState createState() => _RoleSelectionScreenState();
+}
+
+class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final database = FirebaseDatabase.instance.reference();
+  late bool timeConstraintValue;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch the initial value of timeConstraint from the database
+    fetchTimeConstraint().then((value) {
+      setState(() {
+        timeConstraintValue = value == 1;
+      });
+    });
+  }
 
   Future<bool> _checkUserNodeExistence() async {
     User? user = _firebaseAuth.currentUser;
@@ -22,13 +39,24 @@ class RoleSelectionScreen extends StatelessWidget {
     return false;
   }
 
+  Future<int?> fetchTimeConstraint() async {
+    // Fetch TimeConstraint value from the database
+    DatabaseEvent dataSnapshot = await database.child('TimeConstraint').once();
+    return dataSnapshot.snapshot.value as int?;
+  }
+
+  Future<void> updateTimeConstraint(bool newValue) async {
+    // Update TimeConstraint value in the database
+    await database.child('TimeConstraint').set(newValue ? 1 : 0);
+  }
+
   Future<void> _createUserNode() async {
     User? user = _firebaseAuth.currentUser;
 
     if (user != null) {
       var email = user?.email;
       // Create a new user node with dummy data
-        await database.child('Users').child(user.uid).set({
+      await database.child('Users').child(user.uid).set({
         'name': 'your name',
         'age': 1,
         'grade': 'your grade',
@@ -46,6 +74,40 @@ class RoleSelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF495159),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF495159),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FutureBuilder<int?>(
+              future: fetchTimeConstraint(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  // Handle error if needed
+                  return Icon(Icons.error_outline);
+                } else {
+                  // If the Future is complete
+                  int? fetchedTimeConstraint = snapshot.data;
+                  return Switch(
+                    value: fetchedTimeConstraint == 1,
+                    onChanged: (newValue) async {
+                      // Update the UI and the database with the new value
+                      setState(() {
+                        timeConstraintValue = newValue;
+                      });
+                      await updateTimeConstraint(newValue);
+                    },
+                    activeColor: Color(0xFF73C2BE),
+                    inactiveTrackColor: Colors.grey,
+                  );
+                }
+              },
+            ),
+          ),
+        ],
+      ),
       body: FutureBuilder<bool>(
         future: _checkUserNodeExistence(),
         builder: (context, snapshot) {
@@ -135,15 +197,19 @@ class RoleSelectionScreen extends StatelessWidget {
         return AlertDialog(
           backgroundColor: Color(0xFF73C2BE),
           title: Text('Welcome!', style: TextStyle(color: Colors.white)),
-          content: Text('This is your first time signing in! \n \n'
-              'Please head over to the profile page to update your information.',
+          content: Text(
+              'This is your first time signing in! \n \n'
+                  'Please head over to the profile page to update your information.',
               style: TextStyle(color: Color(0xFF495159))),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('OK', style: TextStyle(color: Colors.white,)),
+              child: Text(
+                'OK',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
