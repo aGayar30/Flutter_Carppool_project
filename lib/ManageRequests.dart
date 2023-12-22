@@ -17,6 +17,7 @@ class _ManageRequestsState extends State<ManageRequests> {
   final DatabaseReference database = FirebaseDatabase.instance.reference();
   List<Map<String, String>> ridersList = [];
   final RideData ride;
+  Map<String, Map<String, String>> ridersInfo = {}; // Initialized as an empty map
   final  DateFormat dateFormat = DateFormat('dd/MM/yyyy');
 
   _ManageRequestsState({required this.ride});
@@ -24,6 +25,8 @@ class _ManageRequestsState extends State<ManageRequests> {
   @override
   void initState() {
     super.initState();
+    fetchAllRiderInfo();
+
   }
   @override
   Widget build(BuildContext context) {
@@ -189,12 +192,11 @@ class _ManageRequestsState extends State<ManageRequests> {
     // Update the rider state to 'confirmed' in the database
     DatabaseReference riderRef = FirebaseDatabase.instance.reference().child('Rides').child(ride.rideID);
     riderRef.update({'rider${riderNumber}State': 'confirmed'}).then((_) {
-      fetchRiderInfo(ride.rideID);
-      // Reload the page and update the UI
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ManageRequests(ride: ride)),
-      );
+      setState(() {
+        ride.riderStates['rider${riderNumber}State'] = 'confirmed';
+      });
+      fetchAllRiderInfo();
+
     });
   }
 
@@ -205,12 +207,13 @@ class _ManageRequestsState extends State<ManageRequests> {
       'rider${riderNumber}Id': 'none',
       'rider${riderNumber}State': 'none',
     }).then((_) {
-      fetchRiderInfo(ride.rideID);
-      // Reload the page and update the UI
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ManageRequests(ride: ride)),
-      );
+      setState(() {
+        ride.riderStates['rider${riderNumber}Id'] = 'none';
+        ride.riderStates['rider${riderNumber}State'] = 'none';
+      });
+
+      // Refresh rider info if needed
+      fetchAllRiderInfo();
     });
   }
 
@@ -272,6 +275,24 @@ class _ManageRequestsState extends State<ManageRequests> {
     // Fetch rider phone number from the database
     DatabaseEvent dataSnapshot = await database.child('Users').child(riderId).child('phoneNumber').once();
     return dataSnapshot.snapshot.value.toString();
+  }
+
+  // Method to fetch all rider information for the current ride
+  void fetchAllRiderInfo() async {
+    Map<String, Map<String, String>> tempRidersInfo = {};
+
+    for (int i = 1; i <= 4; i++) {
+      if (ride.riderStates.containsKey('rider${i}Id') &&
+          ride.riderStates['rider${i}Id'] != 'none') {
+        String riderId = ride.riderStates['rider${i}Id']!;
+        Map<String, String> riderInfo = await fetchRiderInfo(riderId);
+        tempRidersInfo['rider$i'] = riderInfo;
+      }
+    }
+
+    setState(() {
+      ridersInfo = tempRidersInfo;
+    });
   }
 
   Future<Map<String, String>> fetchRiderInfo(String rideID) async {

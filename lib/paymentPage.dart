@@ -94,13 +94,26 @@ class _PaymentPageState extends State<PaymentPage> {
                 print('Expiry Date: ${_expiryDateController.text}');
                 print('CVV: ${_cvvController.text}');
 
+                if (_cardNumberController.text.isEmpty || _expiryDateController.text.isEmpty || _cvvController.text.isEmpty){
+                  // Show a success message or navigate to the next screen
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Please enter all your card information'),
+                      backgroundColor: Color(0xFF73C2BE),
+                    ),
+                  );
+                  return;
+                }
                 // Show a success message or navigate to the next screen
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Payment Successful!'),
                     backgroundColor: Color(0xFF73C2BE),
+                    duration: Duration(
+                        seconds: 2),
                   ),
                 );
+                Navigator.pop(context);
               },
               child: Text('Pay Now'),
               style: ElevatedButton.styleFrom(

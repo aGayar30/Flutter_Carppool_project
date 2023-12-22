@@ -90,17 +90,26 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 } else {
                   // If the Future is complete
                   int? fetchedTimeConstraint = snapshot.data;
-                  return Switch(
-                    value: fetchedTimeConstraint == 1,
-                    onChanged: (newValue) async {
-                      // Update the UI and the database with the new value
-                      setState(() {
-                        timeConstraintValue = newValue;
-                      });
-                      await updateTimeConstraint(newValue);
-                    },
-                    activeColor: Color(0xFF73C2BE),
-                    inactiveTrackColor: Colors.grey,
+                  return Row(
+                    children: [
+                      Text(
+                        'Enable Time Constraints',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Switch(
+                        value: fetchedTimeConstraint == 1,
+                        onChanged: (newValue) async {
+                          // Update the UI and the database with the new value
+                          setState(() {
+                            timeConstraintValue = newValue;
+                          });
+                          await updateTimeConstraint(newValue);
+                        },
+                        activeColor: Color(0xFF73C2BE),
+                        inactiveTrackColor: Colors.grey,
+                      ),
+
+                    ],
                   );
                 }
               },

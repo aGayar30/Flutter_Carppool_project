@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'Profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,6 +20,8 @@ class DriverRidesPage extends StatefulWidget {
 class _DriverRidesPageState extends State<DriverRidesPage> {
   List<RideData>? driverRides;
   late String currentDriverId;
+  final StreamController<List<RideData>> _ridesStreamController = StreamController<List<RideData>>();
+
 
   @override
   void initState() {
@@ -42,6 +46,8 @@ class _DriverRidesPageState extends State<DriverRidesPage> {
     setState(() {
       driverRides = fetchedRides;
     });
+    // Notify about changes using StreamController
+    _ridesStreamController.add(fetchedRides);
   }
 
   @override
