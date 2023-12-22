@@ -5,7 +5,7 @@ import 'package:my_project/Profile.dart';
 import 'package:my_project/auth.dart';
 import 'package:my_project/firebase_options.dart';
 import 'RoleSelection.dart';
-
+import 'signupPage.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -95,25 +95,35 @@ class LoginPage extends StatelessWidget {
                 if (connectivityResult == ConnectivityResult.none) {
                   showOfflineDialog(context);
                 }
-                else
-
-                try {
-                  await  _auth.signInWithEmailAndPassword(
-                    email: email,
-                    password: password,
-                  );
-
-                  // Navigate to the next screen or perform any other action on successful login
-                  // For example:
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RoleSelectionScreen()));
-                } catch (e) {
+                if (email.isEmpty || password.isEmpty){
                   // Display a SnackBar with the error message
                   ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                    SnackBar(
-                      content: Text('Incorrect username or password'),
-                      duration: Duration(seconds: 2), // Adjust the duration as needed
-                    ),
-                  );
+                      SnackBar(
+                        content: Text('email and password cannot be empty'),
+                        duration: Duration(seconds: 2), // Adjust the duration as needed
+                      ));
+                }else {
+                  try {
+                    await _auth.signInWithEmailAndPassword(
+                      email: email,
+                      password: password,
+                    );
+
+                    // Navigate to the next screen or perform any other action on successful login
+                    // For example:
+                    Navigator.pushReplacement(
+                        context, MaterialPageRoute(builder: (context) =>
+                        RoleSelectionScreen()));
+                  } catch (e) {
+                    // Display a SnackBar with the error message
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                      SnackBar(
+                        content: Text('Incorrect username or password'),
+                        duration: Duration(
+                            seconds: 2), // Adjust the duration as needed
+                      ),
+                    );
+                  }
                 }
                 },
               style: ElevatedButton.styleFrom(
@@ -121,12 +131,18 @@ class LoginPage extends StatelessWidget {
               ),
               child: Text('Login'),
             ),
-            SizedBox(height: 16.0),
-            Text(
-              'NOTE! You have to login with your ASU email and password (xxpxxxx@eng.asu.edu.eg)',
-              style: TextStyle(
-                color: Colors.white,
+            SizedBox(height: 24.0),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SignupPage()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xFF495159)
               ),
+              child: Text('Do not have an account? Signup here!', style: TextStyle(color: Colors.white),),
             ),
           ],
         ),
