@@ -187,9 +187,9 @@ class _DriverDashboardState extends State<DriverDashboard> {
                 });
               },
               style: ElevatedButton.styleFrom(
-                primary: Color(0xFF73C2BE),
+                primary: Color(0xFF495159),
               ),
-              child: Text('Select Date'),
+              child: Text('Select Date',style: TextStyle(color: Colors.white),),
             ),
 
             SizedBox(height: 30.0),

@@ -69,8 +69,24 @@ class _ManageRequestsState extends State<ManageRequests> {
                           String riderInfo = snapshot.data!['rider$i']!;
 
                           return GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               if (riderStatus == 'requested') {
+                                // Check TimeConstraint from the database
+                                int? timeConstraint = await fetchTimeConstraint();
+                                if (timeConstraint == 1) {
+                                  // Check if the time constraints are met for morning and afternoon rides
+                                  if (ride.period == 'Morning') {
+                                    if (!checkMorningRideTimeConstraint()) {
+                                      showAlert(context,
+                                          "Time constraints not met. Cannot accept or reject requests at this time.");
+                                      return;
+                                    }
+                                  }
+                                  else if (!checkAfternoonRideTimeConstraint()) {
+                                    showAlert(context, "Time constraints not met. Cannot accept or reject requests  at this time.");
+                                    return;
+                                  }
+                                }
                                 showAcceptRejectDialog(context, riderInfo, i);
                               } else if (riderStatus == 'confirmed') {
                                 showAlreadyAcceptedDialog(context);
@@ -116,7 +132,26 @@ class _ManageRequestsState extends State<ManageRequests> {
     );
   }
 
-
+  void showAlert(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF73C2BE),
+          title: Text("Alert" ,style: TextStyle(color: Colors.white),),
+          content: Text(message , style: TextStyle(color: Color(0xFF495159)),),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("OK", style: TextStyle(color: Colors.white),),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void showAcceptRejectDialog(BuildContext context, String riderInfo, int i) {
     showDialog(
@@ -179,6 +214,28 @@ class _ManageRequestsState extends State<ManageRequests> {
     });
   }
 
+  bool checkMorningRideTimeConstraint() {
+    // Check if the current time is before 11:30 PM the day before the ride
+    DateTime now = DateTime.now();
+    DateTime rideDate = ride.date.subtract(Duration(days: 1));
+    DateTime constraintTime = DateTime(rideDate.year, rideDate.month, rideDate.day, 23, 30);
+
+    return now.isBefore(constraintTime);
+  }
+
+  bool checkAfternoonRideTimeConstraint() {
+    // Check if the current time is before 4:30 PM on the day of the ride
+    DateTime now = DateTime.now();
+    DateTime constraintTime = DateTime(ride.date.year, ride.date.month, ride.date.day, 16, 30);
+
+    return now.isBefore(constraintTime);
+  }
+
+  Future<int?> fetchTimeConstraint() async {
+    // Fetch TimeConstraint value from the database
+    DatabaseEvent dataSnapshot = await database.child('TimeConstraint').once();
+    return dataSnapshot.snapshot.value as int?;
+  }
 
 
 
